@@ -1,0 +1,10 @@
+[project]
+name = "mlops-lab-1"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dvc[http]>=3.67.1",
+    "pillow>=12.3.0",
+]
