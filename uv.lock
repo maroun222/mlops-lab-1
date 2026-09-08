@@ -1095,7 +1095,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dvc", extras = ["http"], specifier = ">=3.67.1" },
+    { name = "dvc", specifier = ">=3.67.1" },
     { name = "pillow", specifier = ">=12.3.0" },
 ]
 
