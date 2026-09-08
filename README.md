@@ -55,6 +55,8 @@ uv run dvc pull
 
 Outputs have the structure `data/food11_processed/<split>/<category>/<image>` and `data/food11_processed_mini/<split>/<category>/<image>`. Category names follow the lab exactly, including `Dairy product` and `Noodles-Pasta`.
 
+All 16,643 processed images were validated as RGB 128×128. The mini dataset contains 3,292 images (1,100 training, 1,096 evaluation, 1,096 validation); each was verified byte-for-byte against its corresponding processed image. The combined raw/full/mini snapshot contains 36,578 files and 1,277,237,495 bytes, recorded in commit `11b082d`.
+
 This folder structure is expected by torchvision's `ImageFolder` loader; ResNet itself consumes image tensors, not directories. `ImageFolder` assigns labels alphabetically by folder name, so inspect `class_to_idx` instead of assuming it matches the raw filename labels (Egg and Fried food are ordered differently alphabetically). Use the loader's same class mapping across splits. Images are 128×128 as the lab requires. Pretrained ResNet inference normally uses the preprocessing supplied by its chosen weights, often including 224×224 crops and normalization; the lab's stored size is a separate requirement.
 
 ## Question 8 — Switching data versions
@@ -71,6 +73,8 @@ After checking out the raw-only pointer and running DVC checkout, `food11_proces
 git checkout main
 uv run dvc checkout
 ```
+
+Verified on this project: checkout of `d43356b` left only the raw folder; returning to `main` and running DVC checkout restored both processed folders successfully.
 
 ## Finish the DagsHub portion
 
