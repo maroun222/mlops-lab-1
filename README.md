@@ -1,101 +1,319 @@
-# Lab 1 — Git, DVC and Food-11 preparation
+# Lab 1 — Git, DVC and Food-11 Preparation
 
-Run commands from this repository using PowerShell. Dependencies are managed by uv:
+This lab demonstrates how to version code with Git, version datasets with DVC, store data on DagsHub, and prepare Food-11 images for machine learning.
+
+## Project setup
+
+Python dependencies are managed with uv:
 
 ```powershell
 uv sync
+```
+
+The preparation script is located at `src/food11/data.py`. When the raw dataset is available and the processed folders do not already exist, run:
+
+```powershell
 uv run python src/food11/data.py
 ```
 
-The preparation script keeps raw images intact, preserves all three splits, converts images to RGB, resizes them to 128×128, and places them in category folders. The mini dataset takes the first 100 images in sorted filename order per category per split (or all images if fewer). It refuses to overwrite existing output folders to avoid stale files.
+The script preserves the raw images and all three dataset splits. It converts images to RGB, resizes them to 128×128, and organizes them into category folders.
+
+The mini dataset contains the first 100 images in sorted filename order per category per split, or all available images if fewer than 100 exist. The script refuses to overwrite existing processed folders.
 
 ## Question 1 — Files created by uv init
 
-In this project, `uv init` created `pyproject.toml` (project metadata, Python requirement and dependencies), `.python-version` (Python 3.12), `main.py` (starter program) and an empty `README.md` (project documentation). The `.git` folder already existed from cloning. A root `.gitignore` was absent at inspection; it was added during this solution to ignore the virtual environment and Python temporary files. `uv.lock` was subsequently created when dependencies were added; it records resolved versions for reproducibility.
+In this project, `uv init` created:
+
+- `pyproject.toml`: project metadata, required Python version, and dependencies.
+- `.python-version`: the Python version used by the project, which is 3.12.
+- `main.py`: a starter Python program.
+- `README.md`: project documentation, initially empty.
+
+The `.git` folder already existed from cloning the GitHub repository.
+
+A root `.gitignore` was added later to exclude the virtual environment and temporary Python files. Adding dependencies also generated `uv.lock`, which records resolved dependency versions for reproducibility.
 
 ## Question 2 — Files created by dvc init
 
-`.dvc/config` holds shared DVC settings. `.dvc/.gitignore` excludes DVC cache, temporary state and local configuration from Git. `.dvcignore` controls files DVC should ignore when scanning. Commit these three files. Do not commit `.dvc/cache`, `.dvc/tmp` or `.dvc/config.local`; they are machine-specific or may contain secrets. The `.dvc` directory itself is a configuration directory, whereas `data.dvc` is a dataset pointer file.
+DVC initialization created:
+
+- `.dvc/config`: shared DVC configuration, such as the remote URL.
+- `.dvc/.gitignore`: rules excluding DVC cache, temporary state, and local configuration from Git.
+- `.dvcignore`: rules controlling which files DVC ignores when scanning the project.
+
+These three files should be committed to Git.
+
+The following should not be committed:
+
+- `.dvc/cache`: cached dataset contents.
+- `.dvc/tmp`: temporary DVC state.
+- `.dvc/config.local`: local settings that may contain credentials.
+
+The `.dvc` directory stores configuration and internal state. A file such as `data.dvc` identifies a tracked dataset version.
 
 ## Question 3 — Credentials and configuration scopes
 
-With `--global`, DVC stores settings in the user configuration, typically `%LOCALAPPDATA%\iterative\dvc\config` on Windows. Other scopes are `--system` (all users), `--project` (the default, `.dvc/config`) and `--local` (`.dvc/config.local`, ignored by Git). Precedence is local, project, global, then system.
+With `--global`, DVC stores settings in the current user's configuration. On Windows, the typical location is:
 
-Credentials must not be pushed to GitHub. Store the remote URL in project configuration so new clones know where to fetch data. Store the username and token locally. The lab's global-only remote URL would otherwise be missing on another computer.
+```text
+%LOCALAPPDATA%\iterative\dvc\config
+```
+
+Other configuration scopes are:
+
+- `--system`: settings for all users.
+- `--project`: shared project settings in `.dvc/config`; this is the default scope.
+- `--local`: local project settings in `.dvc/config.local`, which Git ignores.
+
+Configuration precedence, from highest to lowest, is:
+
+```text
+local → project → global → system
+```
+
+Credentials must not be pushed to GitHub. The remote URL should be stored in the shared project configuration so a fresh clone knows where to find the data.
+
+In this project, the authentication type, username, and password-prompt setting were configured locally. The DagsHub token was entered at the prompt.
+
+Defining a remote only with `--global` would not share its URL with someone cloning the repository on another computer.
 
 ## Question 4 — Change to .gitignore
 
-`uv run dvc add data` adds `/data` to the root `.gitignore`. Git therefore ignores the actual image directory while DVC tracks its contents. Commit the updated `.gitignore` with `data.dvc`.
+Running:
+
+```powershell
+uv run dvc add data
+```
+
+added `/data` to the root `.gitignore`.
+
+Git therefore ignores the actual image directory, while DVC tracks its contents. The updated `.gitignore` and the `data.dvc` pointer are committed to Git.
 
 ## Question 5 — Contents of data.dvc
 
-`data.dvc` is a small YAML file describing the tracked directory. Its `outs` entry includes the path `data`, the hash algorithm and directory checksum, total size, and number of files. A directory checksum ends in `.dir` and identifies a cached manifest of its files. It contains no image bytes. The remote URL is configured separately in `.dvc/config`.
+`data.dvc` is a small YAML file describing the tracked dataset.
 
-The actual raw-only snapshot is commit `d43356b`: 16,643 files, 1,188,442,712 bytes, checksum `a3a457d03c51ff8b037a833440f6ad13.dir`. There are 9,866 training, 3,347 evaluation and 3,430 validation images.
+Its `outs` entry includes:
+
+- The tracked path: `data`.
+- The hash algorithm and directory checksum.
+- The total size in bytes.
+- The number of files.
+
+A directory checksum ends in `.dir` and identifies a cached manifest listing the directory's files and their hashes.
+
+The pointer contains no image bytes. The remote URL is configured separately in `.dvc/config`.
+
+The raw-only snapshot, recorded in commit `d43356b`, contains:
+
+- 16,643 files.
+- 1,188,442,712 bytes.
+- Checksum: `a3a457d03c51ff8b037a833440f6ad13.dir`.
+
+The raw dataset has:
+
+| Split | Images |
+|---|---:|
+| Training | 9,866 |
+| Evaluation | 3,347 |
+| Validation | 3,430 |
+| Total | 16,643 |
 
 ## Question 6 — GitHub and DagsHub
 
-After a successful Git push, GitHub contains code, dependency files, non-secret DVC configuration, `.gitignore` and `data.dvc`. It does not contain the image directory. DVC combines the checksum in `data.dvc` with the configured remote URL to locate the data. After DagsHub is connected and `uv run dvc push` succeeds, the actual data objects are stored there and can be browsed through its DVC data interface. DagsHub upload is pending because no DagsHub repository has been created yet; this is the expected result, not a claim of an observed upload.
+GitHub contains:
+
+- Python code.
+- Project documentation.
+- Dependency configuration and lock files.
+- Non-secret DVC configuration.
+- `.gitignore` and `data.dvc`.
+
+The actual image directory is not stored in GitHub.
+
+DVC uses the checksum in `data.dvc` and the configured remote to identify and retrieve the correct dataset version.
+
+The complete dataset was successfully uploaded to DagsHub using:
+
+```powershell
+uv run dvc push
+```
+
+The initial upload encountered a server disconnection near the end. A retry completed successfully and reported `3 files pushed`, uploading the remaining DVC objects.
+
+Project links:
+
+- GitHub: https://github.com/maroun222/mlops-lab-1
+- DagsHub: https://dagshub.com/maroun222/mlops-lab-1
 
 ## Question 7 — Clone into a new folder
 
-A fresh Git clone contains `data.dvc` but no `data` directory. Run `uv sync`, configure any required DVC credentials for that clone, then `uv run dvc pull`. Pull downloads the referenced data into the cache and restores it to the workspace. `dvc checkout` alone cannot download a missing cache from the remote.
+A fresh Git clone contains `data.dvc`, but it does not initially contain the `data` folder.
 
-Verified by cloning the GitHub repository into a new temporary directory: `data.dvc` existed and `data` did not. Remote pulling remains pending DagsHub setup.
+The repository was cloned into `lab1-download-check`:
 
 ```powershell
-git clone https://github.com/maroun222/mlops-lab-1.git lab1-check
-cd lab1-check
+git clone https://github.com/maroun222/mlops-lab-1.git lab1-download-check
+cd lab1-download-check
 uv sync
-# Configure local DagsHub authentication as described below.
+```
+
+Local authentication was then configured:
+
+```powershell
+uv run dvc remote modify --local origin auth basic
+uv run dvc remote modify --local origin user maroun222
+uv run dvc remote modify --local origin ask_password true
+```
+
+The data was downloaded with:
+
+```powershell
 uv run dvc pull
 ```
 
+The command completed successfully and reported:
+
+```text
+32033 files fetched and 36578 files added
+```
+
+All 36,578 workspace files were restored, including:
+
+```text
+data/
+├── food11_raw/
+├── food11_processed/
+└── food11_processed_mini/
+```
+
+The number of fetched objects differs from the number of restored files because DVC can reuse identical content for multiple file paths.
+
+`dvc pull` downloads missing data into the cache and restores the workspace. `dvc checkout` alone restores from the local cache and cannot download missing data from the remote.
+
 ## Image preparation and ResNet
 
-Outputs have the structure `data/food11_processed/<split>/<category>/<image>` and `data/food11_processed_mini/<split>/<category>/<image>`. Category names follow the lab exactly, including `Dairy product` and `Noodles-Pasta`.
+The preparation script produces:
 
-All 16,643 processed images were validated as RGB 128×128. The mini dataset contains 3,292 images (1,100 training, 1,096 evaluation, 1,096 validation); each was verified byte-for-byte against its corresponding processed image. The combined raw/full/mini snapshot contains 36,578 files and 1,277,237,495 bytes, recorded in commit `11b082d`.
+```text
+data/
+├── food11_raw/
+│   ├── training/
+│   ├── evaluation/
+│   └── validation/
+├── food11_processed/
+│   ├── training/
+│   ├── evaluation/
+│   └── validation/
+└── food11_processed_mini/
+    ├── training/
+    ├── evaluation/
+    └── validation/
+```
 
-This folder structure is expected by torchvision's `ImageFolder` loader; ResNet itself consumes image tensors, not directories. `ImageFolder` assigns labels alphabetically by folder name, so inspect `class_to_idx` instead of assuming it matches the raw filename labels (Egg and Fried food are ordered differently alphabetically). Use the loader's same class mapping across splits. Images are 128×128 as the lab requires. Pretrained ResNet inference normally uses the preprocessing supplied by its chosen weights, often including 224×224 crops and normalization; the lab's stored size is a separate requirement.
+Each processed split contains these category folders:
+
+```text
+Bread
+Dairy product
+Dessert
+Egg
+Fried food
+Meat
+Noodles-Pasta
+Rice
+Seafood
+Soup
+Vegetable-Fruit
+```
+
+For example:
+
+```text
+data/food11_processed/training/Bread/0_0.jpg
+```
+
+All 16,643 processed images were validated as RGB images with dimensions of 128×128.
+
+The mini dataset contains:
+
+| Split | Mini images |
+|---|---:|
+| Training | 1,100 |
+| Evaluation | 1,096 |
+| Validation | 1,096 |
+| Total | 3,292 |
+
+Every mini image was verified to match its corresponding processed image byte-for-byte.
+
+The combined raw, processed, and mini dataset contains 36,578 files and 1,277,237,495 bytes. This snapshot was recorded in commit `11b082d`.
+
+This category-folder structure is compatible with torchvision's `ImageFolder` loader. ResNet itself receives image tensors rather than directories.
+
+`ImageFolder` assigns class indices alphabetically by folder name. For this dataset, the category names follow the original numerical label order alphabetically. Checking `class_to_idx` remains useful to confirm that all splits use the same mapping.
+
+The stored images are 128×128 as required by the lab. When using pretrained ResNet weights later, apply the preprocessing required by the selected weights, including the appropriate resizing and normalization.
 
 ## Question 8 — Switching data versions
 
+Commits affecting the data pointer can be listed with:
+
 ```powershell
 git log --oneline -- data.dvc
-git checkout <raw-only-commit-hash>
+```
+
+To restore the raw-only version:
+
+```powershell
+git checkout d43356b
 uv run dvc checkout
 ```
 
-After checking out the raw-only pointer and running DVC checkout, `food11_processed` and `food11_processed_mini` disappear, leaving `food11_raw`. Git changes the pointer, and DVC changes the actual workspace data to match it. The data versions remain in the DVC cache. Return to the current version with:
+After these commands, `food11_processed` and `food11_processed_mini` disappear, leaving `food11_raw`.
+
+Git changes the version of the pointer file, while DVC changes the actual workspace data to match that pointer.
+
+To return to the current version:
 
 ```powershell
 git checkout main
 uv run dvc checkout
 ```
 
-Verified on this project: checkout of `d43356b` left only the raw folder; returning to `main` and running DVC checkout restored both processed folders successfully.
+This exercise was tested successfully: the raw-only version removed both processed folders, and returning to `main` restored them from the DVC cache.
 
-## Finish the DagsHub portion
+## DagsHub setup reference
 
-Create a DagsHub account and connect the existing GitHub repository `maroun222/mlops-lab-1`. Copy the DVC remote configuration from its Remote → Data menu; use your actual DagsHub username, which may differ from the GitHub username. The following HTTP configuration matches the lab handout; use it only if the repository supplies that HTTP endpoint.
+The DagsHub repository is connected to the existing GitHub repository.
+
+Its HTTPS DVC remote is:
+
+```text
+https://dagshub.com/maroun222/mlops-lab-1.dvc
+```
+
+The following commands document the initial setup. The remote is already configured in this project, so there is no need to add it again.
 
 ```powershell
-uv run dvc remote add -d origin https://dagshub.com/<dagshub-user>/mlops-lab-1.dvc
+uv run dvc remote add -d origin https://dagshub.com/maroun222/mlops-lab-1.dvc
 uv run dvc remote modify --local origin auth basic
-uv run dvc remote modify --local origin user <dagshub-user>
+uv run dvc remote modify --local origin user maroun222
 uv run dvc remote modify --local origin ask_password true
+
 git add .dvc/config
 git commit -m "Configure DagsHub DVC remote"
 git push
+
 uv run dvc push
 ```
 
-Enter your DagsHub access token at the password prompt. The URL and default remote are committed; local authentication settings are ignored. In the fresh clone for Question 7, repeat the three local authentication commands before pulling.
+Enter the DagsHub access token when prompted. Do not commit credentials to Git.
 
-Current DagsHub documentation shows an S3-compatible DVC configuration instead. If that is what your repository supplies, use its commands with `uv run` and install `uv add "dvc[s3]"`. The shared settings are `dvc remote add -d origin s3://dvc` and `dvc remote modify origin endpointurl https://dagshub.com/<dagshub-user>/mlops-lab-1.s3`. Keep `access_key_id` and `secret_access_key` in `--local` configuration, using your token as instructed by DagsHub. Commit the updated dependency files and `.dvc/config`, then push Git and DVC. Do not mix the HTTP and S3 authentication options.
+A fresh clone receives the shared remote URL through `.dvc/config`, but needs its own local authentication settings.
 
-After future data changes:
+## Updating the project later
+
+After changing dataset contents:
 
 ```powershell
 uv run dvc add data
@@ -104,6 +322,26 @@ git commit -m "Update Food-11 data and preparation"
 git push
 uv run dvc push
 ```
+
+For documentation-only changes:
+
+```powershell
+git add README.md
+git commit -m "Update lab documentation"
+git push
+```
+
+## Completion status
+
+- GitHub repository created and synchronized.
+- Python environment managed with uv.
+- DVC initialized and configured.
+- Raw dataset tracked with DVC.
+- Processed and mini datasets generated and validated.
+- Complete dataset uploaded to DagsHub.
+- Fresh-clone download completed successfully.
+- Switching between data versions tested successfully.
+- All eight lab questions answered.
 
 ## References
 
