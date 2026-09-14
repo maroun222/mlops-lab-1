@@ -343,30 +343,6 @@ git push
 - Switching between data versions tested successfully.
 - All eight lab questions answered.
 
-## Preparation for the next session
-
-The project includes `mlflow`, `torch`, `torchvision`, and `scikit-learn`.
-PyTorch and torchvision use the explicit official CPU wheel index, as recommended
-for the mini dataset on this laptop with Intel graphics.
-
-Before class, open Docker Desktop and wait for its engine to start. Then open a
-terminal in `mlops-lab-1` and run:
-
-```powershell
-uv sync --locked
-docker info
-docker compose version
-```
-
-Run Python scripts through `uv run python` so they use this project's environment.
-The package is installed as `scikit-learn` and imported in Python as `sklearn`.
-There is no need to regenerate or upload the datasets for this preparation step.
-
-Verified on this laptop on 2026-09-14: Docker runs the `hello-world` container,
-Docker Compose is available, all package dependencies are compatible, the mini
-training split loads 1,100 images, ResNet completes a CPU training step, and MLflow
-successfully records and retrieves a metric in a temporary local experiment.
-
 ## References
 
 - https://doc.dvc.org/command-reference/init
