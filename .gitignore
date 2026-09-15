@@ -3,3 +3,7 @@ __pycache__/
 *.py[cod]
 .env
 /data
+mlflow.db
+mlflow.db-*
+mlruns/
+mlartifacts/
