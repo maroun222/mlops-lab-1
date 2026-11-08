@@ -5,13 +5,14 @@ import sys
 import time
 from pathlib import Path
 
-import mlflow
 import mlflow.pytorch
 import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
+
+import mlflow
 
 ROOT = Path(__file__).resolve().parents[2]
 
