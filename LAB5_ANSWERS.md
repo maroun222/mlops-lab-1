@@ -27,12 +27,16 @@ If lint or a unit test fails, `test` fails and `smoke` is skipped. The registry 
 
 ## Question 6 — First and second GitHub Actions runs
 
-Fill in the observed durations from the repository's **Actions** tab after pushing both commits. Record the total and the `uv sync --frozen` step for each run. The expected improvement is in dependency setup, because `setup-uv` can restore cached packages when the dependency lockfile stays the same. The publishing job also has a separate Docker layer cache. The plain `docker build` in the smoke job runs on its own runner.
-
-| GitHub Actions run | Total duration | `uv sync --frozen` | Cache result |
+| Run | Total duration | `uv sync --frozen` | `push` job |
 | --- | --- | --- | --- |
-| First push | Pending | Pending | Pending |
-| Empty-commit push | Pending | Pending | Pending |
+| First push (`3244ea8`) | 3m 33s | 5s | 2m 38s |
+| Second push (`eb2c51d`) | 1m 14s | 4s | 19s |
+
+The second run was 2m 19s faster overall. The `setup-uv` log confirmed a
+cache hit, and dependency sync went from 5s to 4s. The largest improvement
+was in the `push` job, which went from 2m 38s to 19s. The workflow is
+configured to reuse Docker build layers, which is consistent with that
+larger improvement.
 
 ## Question 7 — Why tag images with the commit SHA?
 
@@ -44,9 +48,7 @@ The publishing job needs repository read access to check out the code and packag
 
 ## Question 9 — What happens when a protected PR fails?
 
-Expected result for the intentionally broken PR: `test` appears as failed, `smoke` is skipped, and the failed required check blocks merging when the rule applies to the user. The team gets one consistent, shared check for the exact proposed change. A laptop-only process relies on each person remembering to run the right checks on the right code.
-
-Record the actual result from the PR after applying the `main` rule and pushing the intentionally failing change.
+In pull request #1, I deliberately changed the expected category for `0_12.jpg` from `Bread` to `Egg`. The required `test` check failed, `smoke` was skipped because it depends on `test`, and GitHub blocked the merge into `main`. This gives the team a shared check for the exact code being merged, even if someone forgets to run the tests locally.
 
 ## Question 10 — Model promotion results
 

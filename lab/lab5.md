@@ -23,7 +23,9 @@ The image tag chooses the code revision. The `champion` alias chooses the model 
 
 ## Local verification
 
-The frozen dependency sync, Ruff, and all six pytest tests passed. The updated source ran in a Linux container built on the existing Lab 3 runtime image. `/health` returned HTTP 200 with `SKIP_MODEL=1` and with the real champion loaded. With the champion loaded, uploading the fixture returned `Meat` with `52.7%` confidence, matching the earlier Lab 3 check. The full Dockerfile build from a cold dependency cache remains to be verified in GitHub Actions. To inspect the saved model versions locally, start the Compose MLflow service with `docker compose up -d mlflow`.
+The frozen dependency sync, Ruff, and all six pytest tests passed. The updated source ran in a Linux container built on the existing Lab 3 runtime image. `/health` returned HTTP 200 with `SKIP_MODEL=1` and with the real champion loaded. With the champion loaded, uploading the fixture returned `Meat` with `52.7%` confidence, matching the earlier Lab 3 check. To inspect the saved model versions locally, start the Compose MLflow service with `docker compose up -d mlflow`.
+
+GitHub Actions built and smoke-tested the image successfully on both `main` pushes. I pulled the published image tagged with the full SHA of commit `eb2c51d`. [First workflow run](https://github.com/maroun222/mlops-lab-1/actions/runs/42472963114) · [Second workflow run](https://github.com/maroun222/mlops-lab-1/actions/runs/42477395665)
 
 ## GitHub steps after the local work
 
