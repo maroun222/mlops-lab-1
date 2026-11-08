@@ -27,8 +27,6 @@ If lint or a unit test fails, `test` fails and `smoke` is skipped. The registry 
 
 ## Question 6 — First and second GitHub Actions runs
 
-## Question 6 — First and second GitHub Actions runs
-
 | Run | Total duration | `uv sync --frozen` | `push` job |
 | --- | --- | --- | --- |
 | First push (`3244ea8`) | 3m 33s | 5s | 2m 38s |
